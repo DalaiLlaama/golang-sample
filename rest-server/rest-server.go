@@ -2,7 +2,7 @@ package main
 
     import (
         "fmt"
-        "golang-sample/github.com/julienschmidt/httprouter"
+        "golang-sample/httprouter"
         "log"
         "net/http"
 		"os"
@@ -76,7 +76,7 @@ package main
     }
 
 	// Endpoint handler for GET /tag/{tagName}/{date}
-	// Returns count stats, article ID lists, and related tags
+	// Returns count stats, article ID list, and related tags
     func getTags(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
         tag := ps.ByName("tagName")
 		date := ps.ByName("date")
@@ -99,6 +99,9 @@ package main
 			idList = ids[len(ids)-10:]
 		} else {
 			idList = ids
+		}
+		if idList == nil {
+			idList = make([]string,0)
 		}
 		fmt.Printf("found %v IDs for date\n", len(idList))
 
@@ -128,8 +131,10 @@ package main
 		summary.RelatedTags = rtSlice
 		
 		b, err := json.Marshal(summary)
-		if err != nil {			
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Println("Error marshalling json:", err)
+			return
 		}
 		
 		fmt.Fprintf(w, string(b))
