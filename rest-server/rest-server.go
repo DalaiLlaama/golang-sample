@@ -11,13 +11,14 @@ package main
     )
 	
 	type Article struct {
-		Id 		string
-		Title 	string
-		Date 	string
-		Body 	string
-		Tags 	[]string
+		Id 		string		`json:"id"`
+		Title 	string		`json:"title"`
+		Date 	string		`json:"date"`
+		Body 	string		`json:"body"`
+		Tags 	[]string	`json:"tags"`
 	}
 	
+	// Article cache
 	type ArticleList struct {
 		Articles []Article
 	}
@@ -33,54 +34,56 @@ package main
 		RelatedTags 	[]string	`json:"related_tags"`
 	}
 
-    func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	    fmt.Println("path", r.URL.Path)
-        fmt.Fprint(w, "Welcome!\n")
-    }
-
-    func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-        fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
-    }
-
-    func getuser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-        uid := ps.ByName("uid")
-        fmt.Fprintf(w, "you are get user %s", uid)
-    }
-
-
-    func modifyuser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-        uid := ps.ByName("uid")
-        fmt.Fprintf(w, "you are modify user %s", uid)
-    }
-
-    func deleteuser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-        uid := ps.ByName("uid")
-        fmt.Fprintf(w, "you are delete user %s", uid)
-    }
-
+	// Endpoint handler for POST /articles
     func addArticle(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		fmt.Printf("body %v", r.Body)
 		decoder := json.NewDecoder(r.Body)
 		var a Article
 		err := decoder.Decode(&a)
 		if err != nil {
-			fmt.Println("error parsing request body", err)
-			fmt.Fprintf(w, "incorrect request data %s", err.Error)
+			w.WriteHeader(http.StatusBadRequest)
+			//fmt.Fprintf(w, "incorrect request data %s", err.Error)
+			fmt.Println(err)
+			return
 		}
 		defer r.Body.Close()
 		
 		addArticleToTagMap(a)
+		articleList.Articles = append(articleList.Articles, a)
 		
         fmt.Fprintf(w, "added article %s", a.Id)
-		fmt.Printf("added article %v/n", a)
+		fmt.Printf("added article %v\n", a)
     }
 
+
+	// Endpoint handler for GET /articles/{id}
+    func getArticles(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+        id := ps.ByName("id")
+		a, ok := getArticle(id)
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			//fmt.Fprintf(w, "article %s not found", id)
+			return
+		}
+
+		b, err := json.Marshal(a)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Println("Error marshalling json:", err)
+			return
+		}
+		
+		fmt.Fprintf(w, string(b))
+    }
+
+	// Endpoint handler for GET /tag/{tagName}/{date}
+	// Returns count stats, article ID lists, and related tags
     func getTags(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
         tag := ps.ByName("tagName")
 		date := ps.ByName("date")
 		t, err := time.Parse("20060102", date)
 		if err != nil {
-			fmt.Fprintf(w, "invalid date %s", date)
+			w.WriteHeader(http.StatusBadRequest)
+			//fmt.Fprintf(w, "invalid date %s", date)
 			return
 		}
 		d := t.Format("2006-01-02")
@@ -89,9 +92,17 @@ package main
 		dateMap := tagDateMap[tag]
 		fmt.Printf("found %v dates for tag\n", len(dateMap))
 		
-		idList := dateMap[d]
+		var idList []string
+		ids := dateMap[d]
+		// we only want the last 10 articles
+		if len(ids) > 10 {
+			idList = ids[len(ids)-10:]
+		} else {
+			idList = ids
+		}
 		fmt.Printf("found %v IDs for date\n", len(idList))
 
+		// Populate a TagSummary struct, then make it JSON
 		var summary TagSummary
 		summary.Tag = tag
 		summary.Count = len(idList)
@@ -99,11 +110,12 @@ package main
 		rtSlice := make([]string, 0, 10)
 		
 		// collect unique related tags
-		rtMap := make(map[string]bool)
+		rtMap := make(map[string]bool) // map key ensures uniqueuness
 		for _, id := range idList {
 			a, ok := getArticle(id)
 			if ok {
 				for _, tag1 := range a.Tags {
+					// ignore the search tag
 					if tag1 != tag {
 						rtMap[tag1] = true
 					}
@@ -116,7 +128,7 @@ package main
 		summary.RelatedTags = rtSlice
 		
 		b, err := json.Marshal(summary)
-		if err != nil {
+		if err != nil {			
 			fmt.Println("Error marshalling json:", err)
 		}
 		
@@ -179,6 +191,7 @@ package main
 		}
 	}
 	
+	// Finds an article by ID, from the local cache. If not found, return ok=false.
 	func getArticle(id string) (a Article, ok bool) {
 		for _, a := range articleList.Articles {
 			if a.Id == id {
@@ -191,12 +204,9 @@ package main
 
     func main() {
         router := httprouter.New()
-        router.GET("/", Index)
-        router.GET("/hello/:name", Hello)
 
         router.POST("/articles", addArticle)
-        router.DELETE("/deluser/:uid", deleteuser)
-        router.PUT("/moduser/:uid", modifyuser)
+        router.GET("/articles/:id", getArticles)
 		router.GET("/tag/:tagName/:date", getTags)
 		
 		articleList = loadArticles()
