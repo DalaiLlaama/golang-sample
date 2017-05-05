@@ -14,7 +14,8 @@ The data structures used within the service are:
 	capability was not requested, but I thought it would help with testing. N.B. the provided file has
 	a single request, ID=1. A real-world implementation would
 	use a map, and would enforce uniqueness of ID, which I have not done as it didn't seem to be explicitly required. Duplicate IDs will not be rejected by the POST /article handler, but requests will only 
-	retrieve the first such article.
+	retrieve the first such article. No doubt a real-world version of this service would include
+	end points for update and delete functions. I have not catered for these.
 - tagDateMap. A nested map, keyed by tag then date, to support the GET /tag/{tag}/{date} request. The 
 	structure is updated whenever a new article is added, and is designed for efficiency in handling a
 	client's /tag GET request. For a real world
@@ -38,3 +39,6 @@ Installing and running:
 - Enter `rest-server` to start the service. The service will bind to localhost port 8080. 
 - Using curl or your favourite REST request client, send requests to 'http://localhost:8080'
 
+Code for the service is in golang-sample/rest-server/rest-server.go
+The code for httprouter is included, in a separate folder, for convenience in installation. It is a clone of the
+library mentioned above.  
