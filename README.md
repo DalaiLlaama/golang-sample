@@ -9,6 +9,7 @@ which covered pretty much everything I needed.
 
 The solution utilises https://github.com/julienschmidt/httprouter This is a HTTP request router that works with
 net/http and implements routing with a minimum of fuss.  
+
 The data structures used within the service are:
 - articleList. A simple array of Article objects, and it provides the cache of article data. Designed to support loading from a text file at startup. This 
 	capability was not requested, but I thought it would help with testing. N.B. the provided file has
@@ -39,6 +40,6 @@ Installing and running:
 - Enter `rest-server` to start the service. The service will bind to localhost port 8080. 
 - Using curl or your favourite REST request client, send requests to 'http://localhost:8080'
 
-Code for the service is in golang-sample/rest-server/rest-server.go
-The code for httprouter is included, in a separate folder, for convenience in installation. It is a clone of the
+Code for the service is in `golang-sample/rest-server/rest-server.go`
+The code for `httprouter` is included, in a separate folder, for convenience in installation. It is a clone of the
 library mentioned above.  
