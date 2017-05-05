@@ -50,7 +50,8 @@ package main
 		addArticleToTagMap(a)
 		articleList.Articles = append(articleList.Articles, a)
 		
-        fmt.Fprintf(w, "added article %s", a.Id)
+		w.WriteHeader(http.StatusOK)
+        //fmt.Fprintf(w, "added article %s", a.Id)
 		fmt.Printf("added article %v\n", a)
     }
 
