@@ -27,13 +27,14 @@ Error handling: Errors encountered while handling a request will result in a res
 Tests: I tested basic operation of the 3 end points, along with a few edge cases and error cases. I added
 	enough articles to test that the stated limit of 10 article IDs was honoured in the /tag response. I used
 	the Postman tool for REST requests, which allowed me to quickly repeat a series of requests.
-	
+
+Timing: I took about 8 hours to set up Go, learn some basics, and work through some exercises. Time for implementation of the service was probably 3-4 hours.
 
 Installing and running:
 
-- Clone from github to your local environment. 
-- Open a terminal/command line session and cd to the 'rest-server' folder.
-- Enter the command 'go build'. This assumes you have the Go environment set up.
-- Enter 'rest-server' to start the service. The service will bind to localhost port 8080. 
+- Download from github to your local environment. The URL is https://github.com/DalaiLlaama/golang-sample 
+- Open a terminal/command line session and cd to the 'golang-sample/rest-server' folder.
+- Enter the command `go build`. This assumes you have the Go environment set up.
+- Enter `rest-server` to start the service. The service will bind to localhost port 8080. 
 - Using curl or your favourite REST request client, send requests to 'http://localhost:8080'
 
